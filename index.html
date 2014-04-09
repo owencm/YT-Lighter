@@ -1,12 +1,23 @@
 <html>
   <head>
-    <title>Identity API Sample App</title>
+    <title>YT Lighter</title>
     <link rel="stylesheet" type="text/css" href="style.css">
+    <script src="swfobject.js"></script>
     <script src="async.js"></script>
     <script src="data.js"></script>
     <script src="app.js"></script>
+    <script src="auth.js"></script>   
   </head>
   <body>
-  	<webview src="http://www.youtube.com" style="width:640px; height:480px"></webview>
+    <div id="auth">
+      <button onclick="auth();">Authorize</button>
+    </div>
+    <div id="ui" style="visibility: hidden">
+      <button onclick="nextChannel();">Next channel</button><button onclick="skip();">Skip</button>
+      <div id="ytapiplayer">
+        You need Flash player 8+ and JavaScript enabled to view this video.
+      </div>
+    </div>
+    <script src="https://apis.google.com/js/client.js"></script>
   </body>
 </html>
