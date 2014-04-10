@@ -1,14 +1,20 @@
 state = {
   AUTHDONE : 0,
-  APPREADY : 1
+  APPREADY : 1,
+  CUEFIRST: 2,
+  CUESECOND: 3,
+  PLAYFIRST: 4,
+  PLAYSECOND: 5,
+  PLAYING: 6
 }
 
+var currState;
 var channels;
 var ytplayer;
 var startTime;
 var channel = 0;
 var currentIndexForChannel = [];
-var errorsPerChannel = []
+var errorsPerChannel = [];
 
 embedPlayer();
 
@@ -24,8 +30,9 @@ function embedPlayer() {
 }
 
 function changeState(newState) {
-  console.log("Changing state to "+newState)
-  if (newState == state.AUTHDONE) {
+  console.log("Changing state from " + currState + " to " + newState)
+  currState = newState;
+  if (currState == state.AUTHDONE) {
     getChannels(function(newChannels) { 
       console.log(newChannels);
       channels = newChannels;
@@ -35,11 +42,20 @@ function changeState(newState) {
       }
       changeState(state.APPREADY);
     });
-  } else if (newState == state.APPREADY) {
+  } else if (currState == state.APPREADY) {
     startTime = Date.now();
     document.querySelector('#auth').style.display = 'none';
     document.querySelector('#ui').style.visibility = 'visible';
     setChannel(channel);
+  } else if (currState == state.CUEFIRST) {
+    console.log("Cueing video");
+    ytplayer.loadVideoById(channels[channel][currentIndexForChannel[channel]]);
+  } else if (currState == state.PLAYFIRST) {
+    console.log("Ready to check duration of first video!");
+    var duration = ytplayer.getDuration();
+    var timePassed = Date.now() - startTime;
+    console.log("Trying to start video at: "+(Math.round(timePassed/1000) % duration)+ " seconds");
+    ytplayer.seekTo(Math.round(timePassed/1000) % duration, true);
   }
 }
 
@@ -51,10 +67,8 @@ function nextChannel() {
 function setChannel(newChannel) {
   channel = newChannel % channels.length;
   console.log("Moved to channel "+newChannel)
-  console.log("Starting channel");
-  // ytplayer.loadPlaylist(channels[channel]);
-  playVideo(channel, currentIndexForChannel[channel]);
   document.querySelector('#channel').innerHTML = channel;
+  changeState(state.CUEFIRST);
 }
 
 function nextVideo() {
@@ -80,9 +94,15 @@ function onYouTubePlayerReady(playerId) {
 
 function onytplayerStateChange(newState) {
   console.log("Player's new state: " + newState);
-  console.log(ytplayer.getDuration());
   if (newState == 0) {
     nextVideo();
+  } else if (newState == 1) {
+    if (currState == state.CUEFIRST) {
+      // We now know duration
+      if (currState == state.CUEFIRST) {
+        changeState(state.PLAYFIRST);
+      }
+    }
   }
 }
 
